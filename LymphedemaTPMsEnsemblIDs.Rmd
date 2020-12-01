@@ -108,5 +108,55 @@ CDK1;CHI3L1
 
 This data table of ENSEMBLE IDs doesn't have the mentioned genes by gene symbol. Even though these look like ENSEMBL IDs they are not. The platform to this series wasn't available. When entering each ID in this series into genecards.org it shows the gene symbol and a different ENSEMBL ID. For example, this data table's ID, ENST00000420783, is WDR6 for the gene symbol, but the ENSEMBL ID is ENSG00000178252. This is because we are looking at transcript data and not gene data directly. Hence, 'ENST' compared to 'ENSG' for transcript and gene respectively.
 
+However, scrolling through the other data in genecards.org for CDK1, the transcripts are made available:
+Transcripts for CDK1 Gene
+Products: CRISPR  miRNA  Inhibitory RNA  Clone
+mRNA/cDNA for CDK1 Gene 
+6 REFSEQ mRNAs :
+NM_001170406.1 NM_001170407.1 NM_001320918.1 NM_001786.5 NM_033379.4 See All 6 »
+16 NCBI additional mRNA sequence :
+AA459484.1 AK291939.1 AK295741.1 AW976143.1 BC014563.1 See All 16 »
+9 Ensembl transcripts including schematic representations, and UCSC links to gene/alias where relevant :
+ENST00000519078 723 nts (view in UCSC) ENST00000475504 1720 nts (view in UCSC) ENST00000395284 1889 nts (view in UCSC) ENST00000519760 276 nts (view in UCSC) ENST00000448257 1948 nts (view in UCSC) ENST00000373809 1613 nts (view in UCSC)ENST00000487784 598 nts (view in UCSC)ENST00000316629 1733 nts (view in UCSC)ENST00000614696 1884 nts (view in UCSC)
 
+And for CHI3L1:
+Transcripts for CHI3L1 Gene
+Products: CRISPR  miRNA  Inhibitory RNA  Clone
+mRNA/cDNA for CHI3L1 Gene 
+1 REFSEQ mRNAs :
+NM_001276.4
+15 NCBI additional mRNA sequence :
+AB209459.1 AK095458.1 AK130142.1 AK130200.1 AK225266.1 See All 15 »
+5 Ensembl transcripts including schematic representations, and UCSC links to gene/alias where relevant :
+ENST00000473185 1920 nts (view in UCSC) ENST00000255409 1747 nts (view in UCSC) ENST00000404436 921 nts (view in UCSC) ENST00000478742 825 nts (view in UCSC) ENST00000472064 890 nts (view in UCSC)
+
+```{r}
+CDK1_list <- c('ENST00000519078','ENST00000475504','ENST00000395284','ENST00000519760','ENST00000448257','ENST00000373809','ENST00000487784','ENST00000316629','ENST00000614696')
+
+CHI3L1_list <- c('ENST00000473185','ENST00000255409','ENST00000404436','ENST00000478742','ENST00000472064')
+
+```
+
+
+```{r}
+library(dplyr);library(tidyr)
+```
+
+```{r}
+cdk1 <- Stats[Stats$Ensembl_ID %in% CDK1_list,]
+chi3l1 <- Stats[Stats$Ensembl_ID %in% CHI3L1_list,]
+
+cdk1$transcriptGene <- 'CDK1'
+chi3l1$transcriptGene <- 'CHI3L1'
+
+cdk1_chi3l1 <- rbind(cdk1,chi3l1)
+cdk1_chi3l1
+```
+
+Only 8/9 transcripts were available for CDK1 and all 5/5 transcripts for CHI3L1 were available. We can see from the table of transcripts for these two genes, that most of the gene transcripts, if any data available, were more than two fold in transcription in the diseased versus the healthy adipose cells. Two transcripts of the CDK1 gene had no data (ENST00000519760) or were negligible for (ENST00000373809).
+
+We can write this table out to csv and choose to examine later or map out.
+```{r}
+write.csv(cdk1_chi3l1,'cdk1_chi3l1.csv',row.names=F)
+```
 
