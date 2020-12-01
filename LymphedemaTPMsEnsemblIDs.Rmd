@@ -1,0 +1,89 @@
+---
+title: "lymphedema Transcripts Per Kilobase Million TPMs per Ensembl gene ID"
+author: "Janis Corona"
+date: "12/1/2020"
+output: html_document
+---
+
+
+This study GSE132936 examines 10 patients who have malignant adipose tissue or excessive body fat that causes lymphedema in the limbs. These patients had liposuction from their upper abdominals where no diseased fat cells were located and also in their upper thighs where the diseased fat cells were located. The mesenchymal stem cells or MSCs were examined for their immune properties by looking at transcript counts or transcripts per kilobase Million TPM of each ENSEMBL gene ID. The cytokines and immunosuppression properties were targeted to see how the stem cells of the diseased fat (thighs) compare to the non-diseased fat (abs). A helpful article on understanding reads per kilobase million and transcripts per kilobase million can be found with an internet search for RPMs or TPMs. I found a helpful article, 'RPKM, FPKM and TPM, clearly explained | RNA-Seq Blog (rna-seqblog.com)' at
+https://rna-seqblog.com/rpkm-fpkm-and-tpm-clearly-explained/
+
+
+My personal summary of mesenchymal stem cells, they are cells that can be stemmed from original cells of fat, cartilage, blood, and muscle tissue as well as heart tissue and other organ tissues. They don't have the immune markers that compromise a person's immune system in healing from damage due to a wound or injury or disease when influenced by antibodies on the diseased cell version of the stem cells. For more information on stem cells or a better summary or understanding, there are a number of helpful topics to search online, and I base this summary of stem cells on the information made available at https://www.sciencedirect.com/topics/neuroscience/mesenchymal-stem-cell.
+
+
+This GEO database, GSE132936, from NCBI is relatively new as it was published last June 2019 and can be accessed at: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE132936
+
+Transcripts are the ribonucleic transcripts in messenger RNA that is transcribed into the gene with possible variations or copy number variants (cnv) of each gene. These play functions with how the body transciption process is affected by epigenetic and hormonal or diet or stress regulators that can modify the transcription process. In this case, their is adipose stem cells being compared in how they are being transcribed or built into a normal abdominal fat cell compared to the diseased upper thigh fat cell. 
+
+The original stem cells for these adipose cells are compared to the changes in transcription for the proportion of each gene in the diseased compared to normal adipose cell. When using the fold change or differential expression the diseased/healthy and the diseased-healthy are used respectively to target genes by their ENSEMBL ID as gene targets for therapeutic treatment of patients with the malignant adipose cells. Liposuction is a therapeutic treatment for these patients to keep the diseased fat (called lip edema as in lipid). This disease, lip edema, has 5 stages that start normal in stage 1 and not so obvious in stage 2, but starts getting progressively worse with each stage up to stage 5 that makes the patient look morbidly obese. Some people don't know they have it until they see that they are otherwise healthy, but follow a decent diet and workout without seeing any noticeable results.
+
+These malignant adipose cells form largely on top of other clusters of the same cells creating rolls and folds that block lymphatic vessels and lymph nodes, preventing them from eliminating their share of tissue waste and fluids when working alongside the veinous system. This causes a back up of fluids in those tissues affected by diseased adipose cells and thus lymphedema that can be removed with elevation of limbs above the heart to drain, wearing compression garments to push the fluid out of the tissue in the day, working out, and also manual lymphatic drainage massage. 
+
+I manually used Excel to gather each of the 20 samples, place in a separate excel worksheet for each sample, compare the metadata header info for each sample, and rename each sample of the GSM...40-GSM...59 with patient1-patient10 and the appended abs or thighs. With abs being normal or healthy fat cells and thighs being the diseased fat cells. All files can be found at my github repository, https://github.com/JanJanJan2018/lymphedema-stem-cells-GSE132936-for-lipedema, if they fit or can be compressed to a size less than 25 mb in size. You could also get the direct data at the link above with access ID GSE132936 and grab each tab delimited file for each of the 20 samples. The worksheet ended up being 179 MB and compressed to 177 MB, so it unfortunately couldn't be added. But all the orginal 20 files are in this repository.
+***
+
+Lets read in the data.
+```{r}
+TPMs <- read.csv('GSE132936_TPMs.csv', sep=',', header=T, 
+                 na.strings=c('',' ','NA'),stringsAsFactors = F)
+```
+
+```{r}
+head(TPMs,10)
+```
+
+
+```{r}
+colnames(TPMs)
+```
+
+```{r}
+healthy <- grep('abs',colnames(TPMs))
+diseased <- grep('thighs',colnames(TPMs))
+
+Healthy <- TPMs[,c(1,healthy)]
+Diseased <- TPMs[,c(1,diseased)]
+```
+
+
+```{r}
+Healthy$HealthyMean <- apply(Healthy[2:10],1,mean)
+head(Healthy)
+```
+
+```{r}
+Diseased$DiseasedMean <- apply(Diseased[2:11],1,mean)
+head(Diseased)
+```
+
+
+```{r}
+Stats <- cbind(Healthy,Diseased[2:12])
+Stats$FoldChange <- Stats$DiseasedMean/Stats$HealthyMean
+Stats$DifferentialExpression <- Stats$DiseasedMean-Stats$HealthyMean
+```
+
+```{r}
+colnames(Stats)
+```
+
+
+```{r}
+colnames(Stats) <- gsub('abs','healthy',colnames(Stats))
+colnames(Stats) <- gsub('thighs','diseased',colnames(Stats))
+colnames(Stats)
+```
+
+```{r}
+head(Stats)
+```
+
+```{r}
+range(Stats$FoldChange)
+range(Stats$DifferentialExpression)
+```
+
+The fold change values of the Stats table need some modifications due to the errors in division by zero for the means. 
+
