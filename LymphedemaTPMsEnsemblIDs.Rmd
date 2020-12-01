@@ -87,16 +87,51 @@ range(Stats$DifferentialExpression)
 
 The fold change values of the Stats table need some modifications due to the errors in division by zero for the means. There are zeros, Inf, and NaNs in the fold change values. The zeros are when the diseased values are zero, the Inf's are from division by zero, and the NaNs are for the zeros divided by zero. Lets make this a conditional fold change feature.
 ```{r}
-Stats$FC <- ifelse(Stats$FoldChange=='NaN',0,
-                   ifelse(Stats$FoldChange==0, 1-Stats$HealthyMean,
-                          ifelse(Stats$FoldChange=='Inf', 1+Stats$DiseasedMean,
-                                 Stats$FoldChange)))
-range(Stats$FC)
+Stats1 <- round(Stats[,2:25],2)
+Stats1$Ensembl_ID <- Stats$Ensembl_ID
+Stats1 <- Stats1[,c(25,1:24)]
+Stats1 <- Stats1[,c(1:11,13:22,12,23:25)]
+colnames(Stats1)
+```
+
+
+```{r}
+range(Stats1$FoldChange)
+```
+
+For the purposes of fold change, the diseased samples that have values and the healthy that don't, skew the data greatly, and indecisive on how to approach those values, as they make foldchange values astronomical when a diseased value is 39 as an examples and a healthy value is 0 it could have a positive 9 digit value for fold change. So we will subset and exclude the Inf, NaN, and 0 values for fold change
+```{r}
+StatsValidFCs <- subset(Stats1, Stats1$HealthyMean!=0)
+range(StatsValidFCs$FoldChange)
 ```
 
 ```{r}
-write.csv(Stats,'lymphedemaStemCells_stats.csv',row.names=F)
+write.csv(StatsValidFCs,'lymphedemaStemCells_stats.csv',row.names=F)
 ```
+
+```{r}
+statsOrdered <- StatsValidFCs[order(StatsValidFCs$FoldChange,StatsValidFCs$DifferentialExpression,decreasing=T),]
+
+FCsDoubled <- StatsValidFCs[StatsValidFCs$FoldChange>2,]
+FCsHalved <- StatsValidFCs[StatsValidFCs$FoldChange<.5,]
+
+quantile(FCsDoubled$FoldChange,c(.25,.5,.75,1))
+quantile(FCsHalved$FoldChange,c(.25,.5,.75,1))
+
+FCsDoubled2 <- FCsDoubled[FCsDoubled$FoldChange>4,]
+FCsHalved2 <- FCsHalved[FCsHalved$FoldChange>.36,]
+
+
+```
+
+These are the top 75th percentile of genes transcripts with fold change values filtered by being at least doubled or halved in disease/healthy ratio. Where the top 25% of instances from each separate data set is used. This reduces the target genes to filter quite a bit.
+
+
+```{r}
+write.csv(FCsDoubled2,'transcripts75thPercentileDoubled.csv',row.names=F)
+write.csv(FCsHalved2,'transcripts75thPercentileHalved.csv',row.names=F)
+```
+
 
 This study looked at two cytokines or immune genes, CDK1 and CHI3L1. We only have the ENSEMBL IDs but going to genecards.org should give us the ENSEMBL IDs to compare. CDK1 is ENSG00000170312 and CHI3L1 is ENSG00000133048. Lets look at these two genes in our data table.
 ```{r}
@@ -159,4 +194,7 @@ We can write this table out to csv and choose to examine later or map out.
 ```{r}
 write.csv(cdk1_chi3l1,'cdk1_chi3l1.csv',row.names=F)
 ```
+
+The study hasn't been written, but the summary of this data says that the inhibition of CDK1 and CHI3L1 gene transcripts could keep the proliferation and adipogenic properties of diseased adipose stem cells (ASC) from occuring. As these two cytokines seem to have a pivotal role in disease onset based on the up regulation of their transcripts in the diseased cells compared to normal phenotype ASC.
+
 
