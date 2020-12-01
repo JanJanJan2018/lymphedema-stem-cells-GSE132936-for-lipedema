@@ -85,5 +85,28 @@ range(Stats$FoldChange)
 range(Stats$DifferentialExpression)
 ```
 
-The fold change values of the Stats table need some modifications due to the errors in division by zero for the means. 
+The fold change values of the Stats table need some modifications due to the errors in division by zero for the means. There are zeros, Inf, and NaNs in the fold change values. The zeros are when the diseased values are zero, the Inf's are from division by zero, and the NaNs are for the zeros divided by zero. Lets make this a conditional fold change feature.
+```{r}
+Stats$FC <- ifelse(Stats$FoldChange=='NaN',0,
+                   ifelse(Stats$FoldChange==0, 1-Stats$HealthyMean,
+                          ifelse(Stats$FoldChange=='Inf', 1+Stats$DiseasedMean,
+                                 Stats$FoldChange)))
+range(Stats$FC)
+```
+
+```{r}
+write.csv(Stats,'lymphedemaStemCells_stats.csv',row.names=F)
+```
+
+This study looked at two cytokines or immune genes, CDK1 and CHI3L1. We only have the ENSEMBL IDs but going to genecards.org should give us the ENSEMBL IDs to compare. CDK1 is ENSG00000170312 and CHI3L1 is ENSG00000133048. Lets look at these two genes in our data table.
+```{r}
+CDK1 <- grep('ENSG00000170312',Stats$Ensembl_ID)
+CHI3L1 <- grep('ENSG00000133048',Stats$Ensembl_ID)
+
+CDK1;CHI3L1
+```
+
+This data table of ENSEMBLE IDs doesn't have the mentioned genes by gene symbol. Even though these look like ENSEMBL IDs they are not. The platform to this series wasn't available. When entering each ID in this series into genecards.org it shows the gene symbol and a different ENSEMBL ID. For example, this data table's ID, ENST00000420783, is WDR6 for the gene symbol, but the ENSEMBL ID is ENSG00000178252. This is because we are looking at transcript data and not gene data directly. Hence, 'ENST' compared to 'ENSG' for transcript and gene respectively.
+
+
 
