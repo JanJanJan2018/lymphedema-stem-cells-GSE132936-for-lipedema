@@ -198,3 +198,243 @@ write.csv(cdk1_chi3l1,'cdk1_chi3l1.csv',row.names=F)
 The study hasn't been written, but the summary of this data says that the inhibition of CDK1 and CHI3L1 gene transcripts could keep the proliferation and adipogenic properties of diseased adipose stem cells (ASC) from occuring. As these two cytokines seem to have a pivotal role in disease onset based on the up regulation of their transcripts in the diseased cells compared to normal phenotype ASC.
 
 
+```{r}
+source('geneCards2.R')
+```
+
+```{r}
+Gene_Path <- './transcripts'
+
+if (dir.exists(Gene_Path)){
+  unlink(Gene_Path, recursive=TRUE)
+  dir.create(Gene_Path)
+} else {
+  dir.create(Gene_Path)
+}
+
+for (i in FCsDoubled2$Ensembl_ID[1:2978]){
+  transcript2Gene(i)
+}
+
+
+
+```
+
+```{r}
+doubledGenes <- read.csv('transcripts/geneTranscriptTable.csv',header=F,sep=',')
+headerDoubled <- read.csv('transcripts/transcriptHeader.csv',header=T)
+colnames(doubledGenes) <- headerDoubled$x
+
+```
+
+
+```{r}
+Gene_Path <- './transcripts'
+
+if (dir.exists(Gene_Path)){
+  unlink(Gene_Path, recursive=TRUE)
+  dir.create(Gene_Path)
+} else {
+  dir.create(Gene_Path)
+}
+```
+
+
+```{r}
+for (i in FCsDoubled2$Ensembl_ID[2979:length(FCsDoubled2$Ensembl_ID)]){
+  transcript2Gene(i)
+}
+
+
+
+```
+
+
+```{r}
+doubledGenes2 <- read.csv('transcripts/geneTranscriptTable.csv',header=F,sep=',')
+colnames(doubledGenes2) <- headerDoubled$x
+
+```
+
+
+
+```{r}
+for (i in FCsHalved2$Ensembl_ID){
+  transcript2Gene(i)
+}
+
+
+
+
+```
+
+
+```{r}
+halvedGenes <- read.csv('transcripts/geneTranscriptTable.csv',header=F,sep=',')
+headerHalved <- read.csv('transcripts/transcriptHeader.csv',header=T)
+colnames(halvedGenes) <- headerHalved$x
+
+```
+
+
+
+```{r}
+for (i in FCsHalved2$Ensembl_ID[5124:length(FCsHalved2$Ensembl_ID)]){
+  transcript2Gene(i)
+}
+
+
+
+
+```
+
+
+```{r}
+halvedGenes2 <- read.csv('transcripts/geneTranscriptTable.csv',header=F,sep=',')
+colnames(halvedGenes2) <- headerHalved$x
+
+```
+
+
+The halvedGenes2 has all the genes available for the 75th percentile of genes more than halved in diseased to normal ASCs. The doubledGenes2 and doubledGenes need to be combined.
+```{r}
+DoubledGenes <- rbind(doubledGenes,doubledGenes2)
+HalvedGenes <- halvedGenes2
+
+```
+
+Lets remove those transcripts with 'no ID' from out data.
+```{r}
+noID_doubled <- grep('no ID',DoubledGenes$transcriptGene)
+noID_halved <- grep('no ID',HalvedGenes$transcriptGene)
+
+Doubled <- DoubledGenes[-noID_doubled,]
+Halved <- HalvedGenes[-noID_halved,]
+```
+
+Lets separate the Ensemble gene IDs from the Gene Symbol IDs for these transcripts.
+```{r}
+Doubled_ENSG <- grep('ENSG',Doubled$transcriptGene)
+Halved_ENSG <- grep('ENSG',Halved$transcriptGene)
+
+Doubled_GeneSymbols <- Doubled[-Doubled_ENSG,]
+Halved_GeneSymbols <- Halved[-Halved_ENSG,]
+
+Doubled_Ensembl <- Doubled[Doubled_ENSG,]
+Halved_Ensembl <- Halved[Halved_ENSG,]
+
+```
+
+```{r}
+write.csv(Doubled_Ensembl,'Doubled_Ensembl.csv',row.names=F)
+write.csv(Doubled_GeneSymbols,'Doubled_GeneSymbols.csv',row.names=F)
+write.csv(Halved_Ensembl,'Halved_Ensembl.csv',row.names=F)
+write.csv(Halved_GeneSymbols,'Halved_GeneSymbols.csv',row.names=F)
+
+
+```
+
+```{r}
+for (i in Doubled_Ensembl$transcriptGene){
+  getSummaries2(i,'RNA')
+}
+
+for (i in Halved_Ensembl$transcriptGene){
+  getSummaries2(i,'transcript')
+}
+
+```
+
+```{r}
+doubledEnsembl <- read.csv('transcripts/rnasummary.csv',header=F)
+halvedEnsembl <- read.csv('transcripts/transcriptsummary.csv',header=F)
+rnaHeader <- read.csv('transcripts/geneHeader_summary_rna.csv',header=T)
+
+colnames(doubledEnsembl) <- rnaHeader$x
+colnames(halvedEnsembl) <- rnaHeader$x
+```
+
+
+```{r}
+for (i in Doubled_GeneSymbols$transcriptGene){
+  getSummaries2(i,'RNAs')
+}
+
+for (i in Halved_GeneSymbols$transcriptGene){
+  getSummaries2(i,'transcripts')
+}
+
+```
+
+```{r}
+doubledGeneSymbol <- read.csv('transcripts/rnassummary.csv',header=F)
+halvedGeneSymbol <- read.csv('transcripts/transcriptssummary.csv',header=F)
+colnames(doubledGeneSymbol) <- rnaHeader$x
+colnames(halvedGeneSymbol) <- rnaHeader$x
+```
+
+Merge by transcripts to the gene summaries.
+```{r}
+doubleGeneSymbolMerge <- merge(doubledGeneSymbol,Doubled_GeneSymbols,
+                     by.x='gene',
+                     by.y='transcriptGene')
+doubleEnsemblMerge <- merge(doubledEnsembl,Doubled_Ensembl,
+                            by.x='gene',
+                            by.y='transcriptGene')
+
+DOUBLED75th <- rbind(doubleEnsemblMerge,doubleGeneSymbolMerge)
+```
+
+```{r}
+halvedGeneSymbolMerge <- merge(halvedGeneSymbol,Halved_GeneSymbols,
+                               by.x='gene',
+                               by.y='transcriptGene')
+halvedEnsemblMerge <- merge(halvedEnsembl,Halved_Ensembl,
+                            by.x='gene',
+                            by.y='transcriptGene')
+HALVED75th <- rbind(halvedGeneSymbolMerge,halvedEnsemblMerge)
+```
+
+```{r}
+dim(DOUBLED75th);dim(HALVED75th)
+```
+
+Now create the data frames of the meta summaries of the transcripts combined with the 75th percentile of Fold changes for those up and down regulated genes by doubled or halved respectively in the disease state as a ratio to the normal state of Adipose Stem Cells.
+```{r}
+FCsDoubled3 <- merge(DOUBLED75th,FCsDoubled2,
+                     by.x='searchedTranscript',by.y='Ensembl_ID')
+FCsHalved3 <- merge(HALVED75th,FCsHalved2,
+                    by.x='searchedTranscript',by.y='Ensembl_ID')
+```
+
+```{r}
+FCsDoubled4 <- FCsDoubled3[,-3]
+FCsHalved4 <- FCsHalved3[,-3]
+
+FCsDoubled4$gene <- as.character(paste(FCsDoubled4$gene))
+FCsDoubled4$EnsemblID <- as.character(paste(FCsDoubled4$EnsemblID))
+FCsHalved4$gene <- as.character(paste(FCsHalved4$gene))
+FCsHalved4$EnsemblID <- as.character(paste(FCsHalved4$EnsemblID))
+```
+
+```{r}
+FCsDoubled4$notGene <- grepl('^ENSG',FCsDoubled4$gene)
+FCsDoubled4$EnsemblID <- ifelse(FCsDoubled4$notGene==TRUE,
+                                FCsDoubled4$gene,
+                                FCsDoubled4$EnsemblID)
+notGene <- grep('^ENSG',FCsDoubled4$gene)
+FCsDoubled4$gene[notGene] <- ''
+write.csv(FCsDoubled4,'FCsDoubled75th_summaries.csv',row.names=F)
+```
+
+```{r}
+FCsHalved4$notGene <- grepl('^ENSG',FCsHalved4$gene)
+FCsHalved4$EnsemblID <- ifelse(FCsHalved4$notGene==TRUE,
+                                FCsHalved4$gene,
+                                FCsHalved4$EnsemblID)
+notGene <- grep('^ENSG',FCsHalved4$gene)
+FCsHalved4$gene[notGene] <- ''
+write.csv(FCsHalved4,'FCsHalved75th_summaries.csv',row.names=F)
+
+```
+
