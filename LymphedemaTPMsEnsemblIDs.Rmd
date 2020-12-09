@@ -423,7 +423,7 @@ FCsDoubled4$EnsemblID <- ifelse(FCsDoubled4$notGene==TRUE,
                                 FCsDoubled4$gene,
                                 FCsDoubled4$EnsemblID)
 notGene <- grep('^ENSG',FCsDoubled4$gene)
-FCsDoubled4$gene[notGene] <- ''
+FCsDoubled4$gene[notGene] <- 'NA'
 write.csv(FCsDoubled4,'FCsDoubled75th_summaries.csv',row.names=F)
 ```
 
@@ -433,8 +433,63 @@ FCsHalved4$EnsemblID <- ifelse(FCsHalved4$notGene==TRUE,
                                 FCsHalved4$gene,
                                 FCsHalved4$EnsemblID)
 notGene <- grep('^ENSG',FCsHalved4$gene)
-FCsHalved4$gene[notGene] <- ''
+FCsHalved4$gene[notGene] <- 'NA'
 write.csv(FCsHalved4,'FCsHalved75th_summaries.csv',row.names=F)
 
+```
+
+```{r}
+FCsHalved5 <- FCsHalved4[,-c(5:7,32)]
+FCsDoubled5 <- FCsDoubled4[,-c(5:7,32)]
+
+
+write.csv(FCsHalved5,'FCsHalved5_summaryGeneCards.csv',row.names=F)
+write.csv(FCsDoubled5,'FCsDoubled5_summaryGeneCards.csv',row.names=F)
+
+```
+
+```{r}
+library(tidyr)
+```
+
+```{r}
+colnames(FCsHalved5
+         )
+```
+
+```{r}
+FCsHalved6 <- gather(FCsHalved5,key='patientID',value='patientValue',5:24)
+FCsDoubled6 <- gather(FCsDoubled5,key='patientID',value='patientValue',5:24)
+```
+
+```{r}
+healthy <- grep('healthy',FCsDoubled6$patientID)
+FCsDoubled6$group <- 'diseased ASCs'
+FCsDoubled6$group[healthy] <- 'healthy ASCs'
+
+healthy1 <- grep('healthy',FCsHalved6$patientID)
+FCsHalved6$group <- 'diseased ASCs'
+FCsHalved6$group[healthy1] <- 'healthy ASCs'
+
+```
+
+Tableau Public is unable to process the strings in the transcripts and gene IDs of ENST and ENSG columns, so they will be removed in order to use Tableau Public's graphing propeties.
+```{r}
+
+
+FCsHalved6$searchedTranscript <- gsub('ENST','',FCsHalved6$searchedTranscript)
+FCsDoubled6$searchedTranscript <- gsub('ENST','',FCsDoubled6$searchedTranscript)
+FCsHalved6$EnsemblID <- gsub('ENSG','',FCsHalved6$EnsemblID)
+FCsDoubled6$EnsemblID <- gsub('ENSG','',FCsDoubled6$EnsemblID)
+
+colnames(FCsHalved6)[c(1,3)] <- c('ENST_ensemblTranscript','ENSG_ensemblGene')
+colnames(FCsDoubled6)[c(1,3)] <- c('ENST_ensemblTranscript','ENSG_ensemblGene')
+
+```
+
+
+```{r}
+write.csv(FCsHalved6,'FCsHalved75th_summariesTidyGroups.csv',row.names=F)
+write.csv(FCsDoubled6,'FCsDoubled75th_summariesTidyGroups.csv',row.names=F)
 ```
 
