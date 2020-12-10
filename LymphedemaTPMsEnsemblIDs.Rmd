@@ -442,6 +442,9 @@ write.csv(FCsHalved4,'FCsHalved75th_summaries.csv',row.names=F)
 FCsHalved5 <- FCsHalved4[,-c(5:7,32)]
 FCsDoubled5 <- FCsDoubled4[,-c(5:7,32)]
 
+FCsDoubled5$EnsemblID <- trimws(FCsDoubled5$EnsemblID,which='right',whitespace="[\t\r\n]")
+FCsHalved5$EnsemblID <- trimws(FCsHalved5$EnsemblID,which='right',whitespace="[\t\r\n]")
+
 
 write.csv(FCsHalved5,'FCsHalved5_summaryGeneCards.csv',row.names=F)
 write.csv(FCsDoubled5,'FCsDoubled5_summaryGeneCards.csv',row.names=F)
@@ -473,7 +476,7 @@ FCsHalved6$group[healthy1] <- 'healthy ASCs'
 
 ```
 
-Tableau Public is unable to process the strings in the transcripts and gene IDs of ENST and ENSG columns, so they will be removed in order to use Tableau Public's graphing propeties.
+Tableau Public was unable to process the strings in the transcripts and gene IDs of ENST and ENSG columns (later recognized a hidden '\n' in the EnsembleID column that might have thrown off Tableau), so they will be removed in order to use Tableau Public's graphing propeties.
 ```{r}
 
 
@@ -491,5 +494,61 @@ colnames(FCsDoubled6)[c(1,3)] <- c('ENST_ensemblTranscript','ENSG_ensemblGene')
 ```{r}
 write.csv(FCsHalved6,'FCsHalved75th_summariesTidyGroups.csv',row.names=F)
 write.csv(FCsDoubled6,'FCsDoubled75th_summariesTidyGroups.csv',row.names=F)
+```
+
+Lets import our body systems genes that has information on product, ingredients, and other information from common products used regularly or infrequently by some people that could be epigenetic gene expression influencers.
+```{r}
+bodyGenes <- read.csv('bodySystemsGenes_detailsMore.csv')
+head(bodyGenes)
+```
+
+Lets see how many genes are in our 75th percentile of Doubled and Halved gene transcripts to compare and chart out.
+```{r}
+#colnames(bodyGenes)
+BSG <- bodyGenes[,c(1:4)]#remove common fields to both tables other than mered one
+
+moreDoubled75th <- merge(BSG,FCsDoubled5,
+                         by.x='gene',
+                         by.y='gene') #331/5232 by gene symbol
+moreHalved75th <- merge(BSG,FCsHalved5,
+                        by.x='gene',
+                        by.y='gene') #2/503 by gene symbol
+
+#The ENST and ENSG were removed in the 6th data frame version tidied, this is not
+#tidied
+moreDoubled75thENSG <- merge(BSG,FCsDoubled5,
+                             by.x='EnsemblID',
+                             by.y='EnsemblID') #only 331  out of 5232
+moreHalved75thENSG <- merge(BSG,FCsHalved5,
+                            by.x='EnsemblID',
+                            by.y='EnsemblID')#only 2 obs out of 503
+
+```
+
+Since it is the same count of genes, the genes we will assume are the same genes and that a gene symbol and an ensembl gene ID exist for each transcipt in our body system genes we have a record for.
+
+```{r}
+colnames(moreDoubled75th)[4] <- 'EnsembleID'
+colnames(moreHalved75th)[4] <- 'EnsembleID'
+
+moreDoubled75thBSG <- moreDoubled75th[,-6]
+moreHalved75thBSG <- moreHalved75th[,-6]
+```
+
+```{r}
+# colnames(moreDoubled75thBSG)
+# colnames(moreHalved75thBSG)
+moreDoubledBSG <- gather(moreDoubled75thBSG,key='patientID',value='patient_TPM_value',7:26)
+moreHalvedBSG <- gather(moreHalved75thBSG,key='patientID',value='patient_TPM_value',7:26)
+```
+
+```{r}
+colnames(moreDoubledBSG)
+colnames(moreHalvedBSG)
+```
+
+```{r}
+write.csv(moreDoubledBSG,'moreDoubled75thBSG.csv',row.names=F)
+write.csv(moreHalvedBSG,'moreHalved75thBSG.csv',row.names=F)
 ```
 
